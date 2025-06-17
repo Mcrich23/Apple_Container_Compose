@@ -3,3 +3,5 @@ services:
   helloworld:
     image: alpine/git # A small image that has 'sh' available
     command: ["sh", "-c", "echo Hello, World!"]
+volumes:
+  db_data:

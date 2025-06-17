@@ -34,4 +34,12 @@ struct Volume: Codable {
             external = nil
         }
     }
+    
+    init(driver: String? = nil, driver_opts: [String : String]? = nil, name: String? = nil, labels: [String : String]? = nil, external: ExternalVolume? = nil) {
+        self.driver = driver
+        self.driver_opts = driver_opts
+        self.name = name
+        self.labels = labels
+        self.external = external
+    }
 }

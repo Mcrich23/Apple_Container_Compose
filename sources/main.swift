@@ -2,11 +2,12 @@ import Foundation
 import Yams
 
 // MARK: - Main Logic
+let usageString = "Usage: container-compose up [-d]"
 
 // Process command line arguments
 let arguments = CommandLine.arguments
 guard arguments.count >= 2 else {
-    print("Usage: \(arguments[0]) up [-d]")
+    print(usageString)
     exit(1)
 }
 
@@ -20,7 +21,7 @@ guard subcommand == "up" else {
 }
 
 let fileManager = FileManager.default
-let currentDirectory = fileManager.currentDirectoryPath // Get current working directory
+let currentDirectory = "/Users/mcrich/Xcode/Assignment-Manager-API" //fileManager.currentDirectoryPath // Get current working directory
 let dockerComposePath = "\(currentDirectory)/docker-compose.yml" // Path to docker-compose.yml
 let envFilePath = "\(currentDirectory)/.env" // Path to optional .env file
 
