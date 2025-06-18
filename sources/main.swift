@@ -335,6 +335,11 @@ do {
                     
                     print("Warning: Volume source '\(source)' appears to be a named volume reference. The 'container' tool does not support named volume references in 'container run -v' command. Linking to \(volumePath) instead.")
                     try fileManager.createDirectory(atPath: volumePath, withIntermediateDirectories: true)
+                    
+                    // Host path exists and is a directory, add the volume
+                    runCommandArgs.append("-v")
+                    // Reconstruct the volume string without mode, ensuring it's source:destination
+                    runCommandArgs.append("\(source):\(destination)") // Use original source for command argument
                 }
             }
         }
