@@ -46,7 +46,7 @@ do {
     }
 
     // Determine project name for container naming
-    var projectName: String? = nil
+    let projectName: String
     if let name = dockerCompose.name {
         projectName = name
         print("Info: Docker Compose project name parsed as: \(name)")
@@ -111,38 +111,43 @@ do {
         for (volumeName, volumeConfig) in volumes {
             let actualVolumeName = volumeConfig.name ?? volumeName // Use explicit name or key as name
 
-            if let externalVolume = volumeConfig.external, externalVolume.isExternal {
-                print("Info: Volume '\(volumeName)' is declared as external.")
-                print("This tool assumes external volume '\(externalVolume.name ?? actualVolumeName)' already exists and will not attempt to create it.")
-            } else {
-                var volumeCreateArgs: [String] = ["volume", "create"]
-
-                // Add driver and driver options
-                if let driver = volumeConfig.driver {
-                    volumeCreateArgs.append("--driver")
-                    volumeCreateArgs.append(driver)
-                }
-                if let driverOpts = volumeConfig.driver_opts {
-                    for (optKey, optValue) in driverOpts {
-                        volumeCreateArgs.append("--opt")
-                        volumeCreateArgs.append("\(optKey)=\(optValue)")
-                    }
-                }
-                // Add labels
-                if let labels = volumeConfig.labels {
-                    for (labelKey, labelValue) in labels {
-                        volumeCreateArgs.append("--label")
-                        volumeCreateArgs.append("\(labelKey)=\(labelValue)")
-                    }
-                }
-
-                volumeCreateArgs.append(actualVolumeName) // Add the volume name
-
-                print("Creating volume: \(volumeName) (Actual name: \(actualVolumeName))")
-                print("Executing container volume create: container \(volumeCreateArgs.joined(separator: " "))")
-                executeCommand(command: "container", arguments: volumeCreateArgs, detach: false)
-                print("Volume '\(volumeName)' created or already exists.")
-            }
+//            if let externalVolume = volumeConfig.external, externalVolume.isExternal {
+//                print("Info: Volume '\(volumeName)' is declared as external.")
+//                print("This tool assumes external volume '\(externalVolume.name ?? actualVolumeName)' already exists and will not attempt to create it.")
+//            } else {
+//                var volumeCreateArgs: [String] = ["volume", "create"]
+//
+//                // Add driver and driver options
+//                if let driver = volumeConfig.driver {
+//                    volumeCreateArgs.append("--driver")
+//                    volumeCreateArgs.append(driver)
+//                }
+//                if let driverOpts = volumeConfig.driver_opts {
+//                    for (optKey, optValue) in driverOpts {
+//                        volumeCreateArgs.append("--opt")
+//                        volumeCreateArgs.append("\(optKey)=\(optValue)")
+//                    }
+//                }
+//                // Add labels
+//                if let labels = volumeConfig.labels {
+//                    for (labelKey, labelValue) in labels {
+//                        volumeCreateArgs.append("--label")
+//                        volumeCreateArgs.append("\(labelKey)=\(labelValue)")
+//                    }
+//                }
+//
+//                volumeCreateArgs.append(actualVolumeName) // Add the volume name
+//
+//                print("Creating volume: \(volumeName) (Actual name: \(actualVolumeName))")
+//                print("Executing container volume create: container \(volumeCreateArgs.joined(separator: " "))")
+//                executeCommand(command: "container", arguments: volumeCreateArgs, detach: false)
+//                print("Volume '\(volumeName)' created or already exists.")
+//            }
+            let volumeUrl = URL.homeDirectory.appending(path: ".containers/Volumes/\(projectName)/\(volumeName)")
+            let volumePath = volumeUrl.path(percentEncoded: false)
+            
+            print("Warning: Volume source '\(volumeName)' appears to be a named volume reference. The 'container' tool does not support named volume references in 'container run -v' command. Linking to \(volumePath) instead.")
+            try? fileManager.createDirectory(atPath: volumePath, withIntermediateDirectories: true)
         }
         print("--- Volumes Processed ---\n")
     }
@@ -262,7 +267,7 @@ do {
             print("Info: Using explicit container_name: \(containerName)")
         } else {
             // Default container name based on project and service name
-            containerName = (projectName != nil) ? "\(projectName!)-\(serviceName)" : serviceName
+            containerName = "\(projectName)-\(serviceName)"
         }
         runCommandArgs.append("--name")
         runCommandArgs.append(containerName)
@@ -325,9 +330,11 @@ do {
                         }
                     }
                 } else {
-                    // This likely refers to a named volume (e.g., 'database' or 'redis')
-                    // The 'container run -v' command does not support named volume references for attachment.
-                    print("Warning: Volume source '\(source)' appears to be a named volume reference. The 'container' tool does not support named volume references in 'container run -v' command. Skipping this volume.")
+                    let volumeUrl = URL.homeDirectory.appending(path: ".containers/Volumes/\(projectName)/\(source)")
+                    let volumePath = volumeUrl.path(percentEncoded: false)
+                    
+                    print("Warning: Volume source '\(source)' appears to be a named volume reference. The 'container' tool does not support named volume references in 'container run -v' command. Linking to \(volumePath) instead.")
+                    try fileManager.createDirectory(atPath: volumePath, withIntermediateDirectories: true)
                 }
             }
         }

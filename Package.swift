@@ -3,6 +3,7 @@ import PackageDescription
 
 let package = Package(
     name: "container-compose-app",
+    platforms: [.macOS(.v15)],
     dependencies: [
         .package(url: "https://github.com/jpsim/Yams.git", from: "5.0.6"),
     ],
